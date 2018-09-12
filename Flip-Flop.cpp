@@ -2,20 +2,48 @@
 #include <chrono>
 #include <thread>
 #include <unistd.h>
+#include <iomanip>  
 
 using namespace std;
 
+
 class Clock{
   static inline bool clk=0; //c++ 17
+  static inline bool prev=0; //c++ 17
+  int t;
+  //static thread drw;
   public:
-  static void func(){
+  void drawClk(){
     while(1){
-      clk=1-clk;
-      this_thread::sleep_for(chrono::milliseconds(100));
+      std::cout.flush();
+      bool temp=clk;
+      if (temp) cout << "-";
+      else cout<<"_";
+      this_thread::sleep_for(chrono::milliseconds(200));
+      prev=temp;
     }
   }
+
+  void calc(){
+    while(1){
+      clk=1-clk;
+      this_thread::sleep_for(chrono::milliseconds(1000));
+    }
+  }
+
+  static void ini(){
+    Clock clk_obj;
+    thread t1(&Clock::drawClk, clk_obj);
+    thread t2(&Clock::calc, clk_obj);
+    t1.join();
+    t2.join();
+  }
+
   bool getVal(){
-    return clk;
+    bool edge;
+    if (clk&&!prev) edge=1;
+    else edge=0;
+    return edge;
   }
 };
 
@@ -85,29 +113,38 @@ class JKff{
     }
 };
 
+
 int main() {
   Clock clk;
-  thread clock = thread(clk.func);
-  
+  thread clock = thread(clk.ini);
   JKff latch;
   latch.inputs(1, 0, clk.getVal());
   latch.calculate();
-  usleep(100000);//microseconds
+  usleep(500000);//microseconds
   latch.inputs(0, 0, clk.getVal());
   latch.calculate();
-  usleep(100000);//microseconds
+  usleep(500000);//microseconds
   latch.inputs(0, 1, clk.getVal());
   latch.calculate();
-  usleep(100000);//microseconds
+  usleep(500000);//microseconds
   latch.inputs(0, 0, clk.getVal());
   latch.calculate();
-  usleep(100000);//microseconds
+  usleep(500000);//microseconds
   latch.inputs(1, 0, clk.getVal());
   latch.calculate();//microseconds
+  usleep(500000);//microseconds
   latch.inputs(0, 0, clk.getVal());
   latch.calculate();//microseconds
+  usleep(500000);//microseconds
   latch.inputs(1, 1, clk.getVal());
   latch.calculate();//microseconds
-  //clock.join(); clock should stop when main ends
+  usleep(500000);//microseconds
+  latch.inputs(1, 1, clk.getVal());
+  latch.calculate();//
+  usleep(500000);//microseconds
+  latch.inputs(1, 1, clk.getVal());
+  latch.calculate();//microseconds
+  usleep(500000);//microseconds
+  //clock.join(); //clock should stop when main ends
   return 0;
 }
